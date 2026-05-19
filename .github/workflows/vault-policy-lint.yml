@@ -1,0 +1,35 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Download Vault binary
+      run: |
+        wget https://releases.hashicorp.com/vault/1.9.3/vault_1.9.3_linux_amd64.zip
+        unzip vault_1.9.3_linux_amd64.zip
+        mv vault /usr/local/bin/
+
+    - name: Run Vault policy fmt --check
+      run: |
+        find . -name "*.hcl" | xargs vault policy fmt --check
+
+    - name: Validate YAML files with kubectl dry-run
+      run: |
+        for file in $(find . -name "*.yaml"); do
+          kubectl --dry-run=client apply -f "$file"
+        done
+
+    - name: Check for hardcoded secrets with gitleaks
+      uses: zricethezav/gitleaks-action@v2.1.0
+      with:
+        args: '--source . --exit-code 1'

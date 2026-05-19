@@ -1,0 +1,35 @@
+global:
+  clusterName: "vault-cluster"
+
+server:
+  replicas: 3
+  antiAffinity:
+    type: preferredDuringSchedulingIgnoredDuringExecution
+    topologyKey: failure-domain.beta.kubernetes.io/zone
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+  storageClass: gp3
+  storageSize: "10Gi"
+  persistence:
+    enabled: true
+  ha:
+    mode: raft
+  unseal:
+    kms:
+      enabled: true
+      kmsKeyId: kmsKeyId
+  auth:
+    kubernetes:
+      enabled: true
+  audit:
+    logLevel: INFO
+    logFormat: json
+    outputPath: stdout
+
+injector:
+  enabled: true
